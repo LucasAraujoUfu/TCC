@@ -36,10 +36,12 @@ def main():
     x_train,x_test,y_train,y_test = train_test_split(X,y)
     x_train = x_train.reshape([3*39, 1867])
     x_test = x_test.reshape([3*14, 1867])
-    y_train = y_train.reshape([3*39,1])
+    y_train = y_train.reshape([3*39])
     y_test = y_test.reshape([3*14,1])
 
-    print(func_learn(1, x_train, y_train, x_test, y_test))
+    print(func_learn(30, x_train, y_train, x_test, y_test))
+    print(func_learn(30, x_train, y_train, x_test, y_test,classifier=RandomForestClassifier))
+
 
 if __name__ == '__main__':
     main()
