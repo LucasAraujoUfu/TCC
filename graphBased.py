@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
 from sklearn.model_selection import train_test_split
+from sklearn.metrics import f1_score, accuracy_score
 from graphGen.graphGen import *
 from math import dist
 
@@ -9,7 +10,7 @@ class PGR:
     def __init__(self):
         self.fitted = False
         self.Ea = {}
-        self.Y = 2.5
+        self.Y = 2.39
         self.fitted = None
         self.I = None
         self.X = None
@@ -68,24 +69,54 @@ class PGR:
         return target
 
 
+def fun_learn(n: int, X, y, X_t, y_t):
+    f1 = list()
+    acc = list()
+    f1_max = 0
+    acc_max = 0
+    for i in range(1, n + 1):
+        g = sKnnGraph(X, n, pon=1, target=True, y=y)
+        classifier = PGR()
+        classifier.fit(g, X, y)
+        l = list()
+        for j in X_t:
+            l.append(classifier.predict(j))
+        l = np.array(l)
+        f1_current = f1_score(y_t, l)
+        acc_current = accuracy_score(y_t, l)
+        f1_max = max(f1_max, f1_current)
+        acc_max = max(acc_max, acc_current)
+        f1.append(f1_current)
+        acc.append(acc_current)
+    df = {'acuracia': acc, 'f1': f1}
+    df = pd.DataFrame.from_dict(df)
+    df.to_csv('resultado/graphPGR.csv')
+    return f1_max, acc_max
+
+
 def main():
     df = pd.read_csv('data/controle_tea.dat', header=None, sep=' ')
     y = np.array(df[1867])
     X = np.array(df[list(range(1867))])
     X = X.reshape([53, 3, 1867])
     y = y.reshape([53, 3, 1])
-    x_train, x_test, y_train, y_test = train_test_split(X, y)
-    x_train = x_train.reshape([3 * 39, 1867])
-    x_test = x_test.reshape([3 * 14, 1867])
-    y_train = y_train.reshape([3 * 39])
-    y_test = y_test.reshape([3 * 14])
 
-    g = sKnnGraph(x_train, 5, pon=1, target=1, y=y_train)
-    pgr = PGR()
-    pgr.fit(g, x_train, y_train)
+    f1 = 0.
+    acc = 0.
+    for i in range(10):
+        x_train, x_test, y_train, y_test = train_test_split(X, y)
+        x_train = x_train.reshape([3 * 39, 1867])
+        x_test = x_test.reshape([3 * 14, 1867])
+        y_train = y_train.reshape([3 * 39])
+        y_test = y_test.reshape([3 * 14])
 
-    for i in x_test:
-        print(pgr.predict(i))
+        f, a = fun_learn(30, x_train, y_train, x_test, y_test)
+        f1 += f
+        acc += a
+
+    f1 /= 10.
+    acc /= 10.
+    print(f1, acc)
 
 
 if __name__ == '__main__':
