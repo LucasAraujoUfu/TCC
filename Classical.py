@@ -69,7 +69,7 @@ def neural_network(X, y, X_t, y_t):
 
     model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy', tf.keras.metrics.Precision()])
     y = tf.keras.utils.to_categorical(y, num_classes=2)
-    model.fit(X, y, epochs=15,)
+    model.fit(X, y, epochs=20,)
     pre = model.predict(X_t)
     l = []
     for i in pre:
@@ -97,6 +97,11 @@ def main():
         X = X.reshape([53, 3, 1867])
     y = y.reshape([53, 3, 1])
 
+    stratify = []
+
+    for i in y:
+        stratify.append(i[0])
+
     f1 = [0., 0., 0.]
     acc = [0., 0., 0.]
     prec = [0., 0., 0.]
@@ -104,7 +109,7 @@ def main():
 
     for i in range(10):
         print(i)
-        x_train, x_test, y_train, y_test = train_test_split(X, y)
+        x_train, x_test, y_train, y_test = train_test_split(X, y, stratify=stratify)
         if '-o' in sys.argv:
             x_train = x_train.reshape([3 * 39, 900])
             x_test = x_test.reshape([3 * 14, 900])
@@ -116,21 +121,21 @@ def main():
             y_train = y_train.reshape([3 * 39])
             y_test = y_test.reshape([3 * 14, 1])
 
-        f, a, p, r = func_learn(50, x_train, y_train, x_test, y_test)
-        f1[0] += f
-        acc[0] += a
-        prec[0] += p
-        rcall[0] += r
-        f, a, p, r = func_learn(50, x_train, y_train, x_test, y_test, classifier=RandomForestClassifier)
-        f1[1] += f
-        acc[1] += a
-        prec[1] += p
-        rcall[1] += r
-        # f, a, p, r = neural_network(x_train, y_train, x_test, y_test)
-        # f1[2] += f
-        # acc[2] += a
-        # prec[2] += p
-        # rcall[2] += r
+        # f, a, p, r = func_learn(50, x_train, y_train, x_test, y_test)
+        # f1[0] += f
+        # acc[0] += a
+        # prec[0] += p
+        # rcall[0] += r
+        # f, a, p, r = func_learn(50, x_train, y_train, x_test, y_test, classifier=RandomForestClassifier)
+        # f1[1] += f
+        # acc[1] += a
+        # prec[1] += p
+        # rcall[1] += r
+        f, a, p, r = neural_network(x_train, y_train, x_test, y_test)
+        f1[2] += f
+        acc[2] += a
+        prec[2] += p
+        rcall[2] += r
 
     for i in range(3):
         f1[i] /= 10
