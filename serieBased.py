@@ -2,6 +2,7 @@ import sys
 import pandas as pd
 import numpy as np
 import torch
+import torch.nn as nn
 import torch.nn.functional as F
 from torch.nn import Linear
 from torch_geometric.nn import GCNConv, GATConv, GATv2Conv, TransformerConv
@@ -11,7 +12,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.metrics import f1_score, accuracy_score, precision_score, recall_score
 
 
-class GNN(torch.nn.Module):
+class GNN(nn.Module):
     def __init__(self, input_size, hidden_channels, conv, conv_params={}):
         super(GNN, self).__init__()
         # torch.manual_seed(12345)
@@ -83,14 +84,20 @@ def main():
 
         x = []
         edge_list = []
+        # edge_col = []
         batch = []
         for ct, j in enumerate(x_train):
-            x += j.vs['mag']
-            batch += [ct]*num_features
-            edge_list.append(j.get_adjacency())
+            x.append(j.vs['mag'])
+            edge_list += list(j.get_edgelist())
+            #edge_col += list(j.es['weight'])
+            batch += [ct]*len(j.get_edgelist())
 
-        x = torch.tensor(x).to(device)
+        x = torch.tensor(x, dtype=torch.double).to(device)
+        print(x)
         edge_list = torch.tensor(edge_list).to(device)
+        edge_list = torch.transpose(edge_list,0,1)
+        # edge_col = torch.tensor(edge_col, dtype=torch.double).to(device)
+        # print(edge_list.size())
         batch = torch.tensor(batch).to(device)
 
         val_x = []
@@ -99,9 +106,10 @@ def main():
         for ct, j in enumerate(x_test):
             val_x += j.vs['mag']
             val_batch += [ct] * num_features
-            val_edge_list.append(j.get_adjacency())
+            val_edge_list.append(list(j.get_adjacency()))
 
         val_x = torch.tensor(x).to(device)
+        val_x = val_x.double()
         val_edge_list = torch.tensor(edge_list).to(device)
         val_batch = torch.tensor(batch).to(device)
 

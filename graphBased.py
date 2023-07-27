@@ -1,4 +1,5 @@
 import sys
+import itertools
 import pandas as pd
 import numpy as np
 from sklearn.model_selection import train_test_split
@@ -37,15 +38,35 @@ def fun_learn(n: int, X, y, X_t, y_t, graph=sKnnGraph):
         for i in range(10, 60, 10):
             it.append(dst*i/100)
 
+    elif graph in [eSKnnGraph, eMKnnGraph]:
+        dst = 0.
+        for i in X:
+            for j in X:
+                if '-c' in sys.argv:
+                    dst += distC(i, j)
+                else:
+                    dst += dist(i, j)
+        dst /= len(X) ** 2
+        for i in range(10, 60, 10):
+            it.append(dst * i / 100)
+
+        it = itertools.product(it, range(1, n+1))
+
     else:
         it = range(1, n + 1)
 
     for i in it:
         if '-c' in sys.argv:
-            g = graph(X, i, pon=1, target=True, y=y, dif=distC)
+            if graph in [eSKnnGraph, eMKnnGraph]:
+                g = graph(X, i[1], i[0], pon=1, target=True, y=y, dif=distC)
+            else:
+                g = graph(X, i, pon=1, target=True, y=y, dif=distC)
             classifier = PGR(dst=distC)
         else:
-            g = graph(X, i, pon=1, target=True, y=y)
+            if graph in [eSKnnGraph, eMKnnGraph]:
+                g = graph(X, i[1], i[0], pon=1, target=True, y=y)
+            else:
+                g = graph(X, i, pon=1, target=True, y=y)
             classifier = PGR()
         classifier.fit(g, X, y)
         lis = []
@@ -92,7 +113,7 @@ def main():
     for i in y:
         stratify.append(i[0])
 
-    for gr in [sKnnGraph, mKnnGraph, eNGraph]:
+    for gr in [eSKnnGraph, eMKnnGraph]:  # [sKnnGraph, mKnnGraph, eNGraph]:
         f1 = 0.
         acc = 0.
         prec = 0.

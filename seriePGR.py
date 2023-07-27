@@ -1,3 +1,4 @@
+import math
 import sys
 import pandas as pd
 import numpy as np
@@ -9,10 +10,12 @@ from sklearn.metrics import f1_score, accuracy_score, precision_score, recall_sc
 
 
 def diff(a: ig.Graph, b: ig.Graph):
-    dif = 0
-    for i, _ in enumerate(a.vs):
-        dif += abs(a.vs[i].neighbors() - b.vs[i].neighbors())
-    return dif
+    dif = 0.
+    mt_res = a.get_adjacency() - b.get_adjacency()
+    for i in mt_res:
+        for j in i:
+            dif += math.sqrt(abs(j))
+    return math.sqrt(dif)
 
 
 def fun_learn(n: int, X, y, X_t, y_t, graph=sKnnGraph):
